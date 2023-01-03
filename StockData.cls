@@ -9,18 +9,20 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Sub StockData()
     
-    
+    'Perform all processing for every worksheet
     For Each ws In Worksheets
     
         Dim WorksheetName As String
+        Dim LastSheetRow As Double
+        Dim SummaryRow As Double
+        
         Dim PreviousTicker As String
         Dim PreviousOpenPrice As Double
         Dim ClosePrice As Double
-        Dim LastSheetRow As Double
-        Dim SummaryRow As Double
+        Dim Volume As Double
         Dim YearlyChange As Double
         Dim PercentChange As Double
-        Dim Volume As Double
+
         Dim GreatestPercentIncreaseTicker As String
         Dim GreatestPercentDecreaseTIcker As String
         Dim GreatestVolumeTicker As String
@@ -28,7 +30,7 @@ Sub StockData()
         Dim GreatestPercentDecreaseNumber As Double
         Dim GreatestVolumeNumber As Double
                                
-        'SummaryRow set the first row to write out the first stock summary
+        'SummaryRow initally set the first row to write out the first stock summary
         SummaryRow = 2
         
         Volume = 0
@@ -61,38 +63,50 @@ Sub StockData()
         PreviousOpenPrice = ws.Cells(2, 3).Value
         ClosePrice = ws.Cells(2, 6).Value
         
-        'Loop through the entore worksheet
+        'Loop through the entire worksheet
         For MainRowNum = 2 To LastSheetRow
             
             'Check if the current stock has changed
             If ws.Cells(MainRowNum, 1).Value = PreviousTicker And MainRowNum < LastSheetRow Then
+            
                 'STILL THE SAME STOCK
                 StockEndingRow = MainRowNum
                 ClosePrice = ws.Cells(MainRowNum, 6).Value
                 Volume = Volume + ws.Cells(MainRowNum, 7).Value
+                
             Else
+            
                 'DIFFERENT STOCK
-                'Write out the summary rows for the previous stock
+                'Write out the Yearly and Percent Change stock summary rows for the previous stock
                 ws.Cells(SummaryRow, 9).Value = PreviousTicker
                 YearlyChange = ClosePrice - PreviousOpenPrice
                 ws.Cells(SummaryRow, 10).Value = YearlyChange
                 PercentChange = ((ClosePrice - PreviousOpenPrice) / PreviousOpenPrice)
                 ws.Cells(SummaryRow, 11).Value = PercentChange
+                
+                'If last row, special logic to include the volume of the final row, otherwise it will be missed
                 If MainRowNum = LastSheetRow Then
                     Volume = Volume + ws.Cells(MainRowNum, 7).Value
                 End If
-                'Conditional formatting
+                'Write the Volume stock summary
+                ws.Cells(SummaryRow, 12).Value = Volume
+                
+                'Conditional formatting (pos change green, neg change red, no change white)
                 If PercentChange > 0 Then
                     'Green if positive
+                    ws.Cells(SummaryRow, 10).Interior.ColorIndex = 4
                     ws.Cells(SummaryRow, 11).Interior.ColorIndex = 4
                 ElseIf PercentChange < 0 Then
                     'Red if negative
+                    ws.Cells(SummaryRow, 10).Interior.ColorIndex = 3
                     ws.Cells(SummaryRow, 11).Interior.ColorIndex = 3
                 Else
                     'White if neither
+                    ws.Cells(SummaryRow, 10).Interior.ColorIndex = 0
                     ws.Cells(SummaryRow, 11).Interior.ColorIndex = 0
                 End If
-                'Check and set greatest section
+                
+                'Check each stock for for Greatest Increase, Greatest Decrease, Greatest Volume
                 If PercentChange > GreatestPercentIncreaseNumber Then
                     GreatestPercentIncreaseTicker = PreviousTicker
                     GreatestPercentIncreaseNumber = PercentChange
@@ -105,21 +119,23 @@ Sub StockData()
                     GreatestVolumeTicker = PreviousTicker
                     GreatestVolumeNumber = Volume
                 End If
-                'Write summary volume
-                ws.Cells(SummaryRow, 12).Value = Volume
+                
                 'Increment the SummaryRow so it's ready to write out the next summary
                 SummaryRow = SummaryRow + 1
+                
                 'Reset the Previous values for the new stock and restart the vol indicator
                 PreviousTicker = ws.Cells(MainRowNum, 1).Value
                 PreviousOpenPrice = ws.Cells(MainRowNum, 3).Value
                 Volume = ws.Cells(MainRowNum, 7).Value
+                
                 'Put new close price (first close of the new stock)
                 ClosePrice = ws.Cells(MainRowNum, 6).Value
+            
             End If
             
         Next MainRowNum
         
-        'Finished looping throu the worksheet, so write out greatest section
+        'Finished looping through worksheet, so write out Greatest Increase, Greatest Decrease, Greatest Volume
         ws.Cells(2, 15).Value = "Greatest % Increase"
         ws.Cells(2, 16).Value = GreatestPercentIncreaseTicker
         ws.Cells(2, 17).Value = GreatestPercentIncreaseNumber
@@ -130,6 +146,8 @@ Sub StockData()
         ws.Cells(4, 16).Value = GreatestVolumeTicker
         ws.Cells(4, 17).Value = GreatestVolumeNumber
         
+    'Finished with current worksheet, go process next worksheet
     Next ws
     
 End Sub
+
