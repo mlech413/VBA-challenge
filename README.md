@@ -1,4 +1,4 @@
-# VBA-challenge
+# VBA Stock Analysis
 ## Stock analysis for years 2018  - 2020
 
 The VBA routine StockData was run first in the test file alphabetical_testing.xlsm, and then in the actual data Multiple_year_stock_data.xlsm (which was too large to upload to github).
